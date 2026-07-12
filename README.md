@@ -1,38 +1,113 @@
-# Test Website
+# ResourceHub
 
-This is a simple test website built with HTML, CSS, and JavaScript.
+A monorepo project with Spring Boot backend and React frontend.
 
-## Features
+## Project Structure
 
-- Responsive design that works on mobile and desktop
-- Interactive elements including buttons and forms
-- Smooth scrolling navigation
-- Animated section transitions
-- Keyboard shortcuts
+```
+ccq-resourcehub/
+├── backend/      # Spring Boot backend application
+├── frontend/     # React frontend application
+└── docs/         # Documentation
+```
 
-## Files
+## Prerequisites
 
-- `index.html` - Main HTML structure
-- `styles.css` - CSS styling
-- `script.js` - JavaScript functionality
+- Java 17+ for backend
+- Node.js 18+ for frontend
+- Maven 3.6+ (optional, wrapper included)
 
-## How to Use
+## Quick Start
 
-1. Save all three files in the same directory
-2. Open `index.html` in any modern web browser
-3. Interact with the website:
-   - Click the "Click Me!" button to see an animated message
-   - Fill out and submit the contact form
-   - Navigate using the menu items
-   - Press 'C' key to change background color
+### Backend
 
-## Customization
+```bash
+cd backend
+./mvnw spring-boot:run
+```
 
-You can modify any aspect of the website by editing the respective files:
-- Change colors, fonts, and layout in `styles.css`
-- Add new functionality in `script.js`
-- Modify content and structure in `index.html`
+The backend will start on `http://localhost:8080`
 
-## Requirements
+### Frontend
 
-- Modern web browser (Chrome, Firefox, Safari, Edge, etc.)# ccq-resourcehub
+```bash
+cd frontend
+npm start
+```
+
+The frontend will start on `http://localhost:3000`
+
+## Build Commands
+
+### Backend
+
+```bash
+cd backend
+./mvnw clean package
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run build
+```
+
+## Development
+
+### Backend Structure
+
+```
+backend/
+├── src/
+│   ├── main/
+│   │   ├── java/com/example/resourcehub/
+│   │   │   └── ResourceHubApplication.java
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       ├── static/      # Static resources
+│   │       └── templates/   # Template files
+│   └── test/
+│       └── java/com/example/resourcehub/
+```
+
+### Frontend Structure
+
+```
+frontend/
+├── public/
+├── src/
+│   ├── App.css
+│   ├── App.js
+│   ├── index.css
+│   └── index.js
+├── package.json
+└── README.md
+```
+
+## Configuration
+
+Environment variables can be configured via:
+
+- Backend: `backend/src/main/resources/application.properties`
+- Frontend: Environment variables in `.env` file (create in frontend directory)
+
+## Testing
+
+### Backend
+
+```bash
+cd backend
+./mvnw test
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm test
+```
+
+## Documentation
+
+See the `docs/` directory for additional documentation.
