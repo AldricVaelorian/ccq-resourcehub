@@ -4,28 +4,59 @@ This document describes how to set up the ResourceHub development environment fr
 
 ## Prerequisites
 
-- **Java 17+** for backend (required)
-- **Node.js 18+** for frontend
-- **Maven 3.6+** (optional, wrapper included)
+### Backend
+- **Java 25 LTS** (required)
+- **Spring Boot 4.1**
+- **Maven 3.9** (wrapper included)
+- **PostgreSQL 18** (for database)
+
+### Frontend
+- **Node.js 24 LTS**
+- **React 19**
+- **TypeScript 6**
+- **Vite 8.1**
+- **Tailwind CSS 4.3**
+
+### Testing
+- **JUnit 5**, **Mockito**, **AssertJ**
+- **Spring test slices**, **Testcontainers**
+
+### Database Migrations
+- **Flyway** or **Liquibase**
+
+### API Style
+- **REST**
 
 ### Installing Java (Ubuntu/Debian)
 ```bash
 sudo apt update
-sudo apt install openjdk-17-jdk
-java -version  # Verify installation - should show openjdk version "17.x"
+sudo apt install openjdk-25-jdk
+java -version  # Verify installation - should show openjdk version "25.x"
 ```
 
 ### Installing Java (macOS with Homebrew)
 ```bash
-brew install openjdk@17
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+brew install openjdk@25
+export JAVA_HOME=$(/usr/libexec/java_home -v 25)
 ```
 
 ### Installing Node.js
-Download from [nodejs.org](https://nodejs.org/) or use nvm:
+Use nvm to install Node.js 24 LTS:
 ```bash
-nvm install 18
-nvm use 18
+nvm install 24
+nvm use 24
+```
+
+### Installing Maven (optional, wrapper included)
+```bash
+# Ubuntu/Debian
+sudo apt install maven
+
+# macOS with Homebrew
+brew install maven
+
+# Verify version (should be 3.9+)
+mvn --version
 ```
 
 ## Local Development Setup
@@ -33,10 +64,10 @@ nvm use 18
 ### Prerequisites Check
 
 ```bash
-# Check Java version (required: 17+)
+# Check Java version (required: 25 LTS)
 java -version
 
-# Check Node.js version (required: 18+)
+# Check Node.js version (required: 24 LTS)
 node --version
 
 # Check npm version
@@ -120,8 +151,8 @@ cd backend
 ### Java Not Found
 
 If you see "JAVA_HOME is not defined", install Java first:
-- Ubuntu: `sudo apt install openjdk-17-jdk`
-- macOS: `brew install openjdk@17`
+- Ubuntu: `sudo apt install openjdk-25-jdk`
+- macOS: `brew install openjdk@25`
 
 ## IDE Setup
 

@@ -13,9 +13,28 @@ ccq-resourcehub/
 
 ## Prerequisites
 
-- Java 17+ for backend
-- Node.js 18+ for frontend
-- Maven 3.6+ (optional, wrapper included)
+### Backend
+- **Java 25 LTS** (required)
+- **Spring Boot 4.1**
+- **Maven 3.9** (wrapper included)
+- **PostgreSQL 18** (for database)
+
+### Frontend
+- **Node.js 24 LTS**
+- **React 19**
+- **TypeScript 6**
+- **Vite 8.1**
+- **Tailwind CSS 4.3**
+
+### Testing
+- **JUnit 5**, **Mockito**, **AssertJ**
+- **Spring test slices**, **Testcontainers**
+
+### Database Migrations
+- **Flyway** or **Liquibase**
+
+### API Style
+- **REST**
 
 ## Quick Start
 
@@ -65,8 +84,9 @@ backend/
 │   │   │   └── ResourceHubApplication.java
 │   │   └── resources/
 │   │       ├── application.properties
-│   │       ├── static/      # Static resources
-│   │       └── templates/   # Template files
+│   │       ├── db/
+│   │       │   └── migration/    # Flyway/Liquibase migrations
+│   │       └── static/           # Static resources
 │   └── test/
 │       └── java/com/example/resourcehub/
 ```
@@ -77,12 +97,17 @@ backend/
 frontend/
 ├── public/
 ├── src/
-│   ├── App.css
-│   ├── App.js
-│   ├── index.css
-│   └── index.js
+│   ├── assets/
+│   ├── components/
+│   ├── pages/
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── index.html
 ├── package.json
-└── README.md
+├── tsconfig.json
+├── vite.config.ts
+└── tailwind.config.js
 ```
 
 ## Configuration
