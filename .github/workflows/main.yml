@@ -32,7 +32,7 @@ jobs:
           cache: maven
 
       - name: Run tests
-        run: ./mvnw test
+        run: ./backend/mvnw test
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v6
@@ -64,7 +64,7 @@ jobs:
           cache: maven
 
       - name: Run Maven verification
-        run: ./mvnw verify -DskipTests
+        run: ./backend/mvnw verify -DskipTests
 
   mutation-testing:
     name: Mutation testing
@@ -83,7 +83,7 @@ jobs:
           cache: maven
 
       - name: Run PIT mutation tests
-        run: ./mvnw pitest:mutationCoverage
+        run: ./backend/mvnw pitest:mutationCoverage
 
       - name: Upload PIT mutation report
         uses: actions/upload-artifact@v6
@@ -117,7 +117,7 @@ jobs:
           build-mode: manual
 
       - name: Build for CodeQL
-        run: ./mvnw package -DskipTests
+        run: ./backend/mvnw package -DskipTests
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
