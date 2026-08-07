@@ -1,0 +1,50 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Java
+*.class
+*.log
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Test coverage
+coverage/
+.jacoco/
+
+# Spring Boot
+target/
+!target/classes
+!target/test-classes
+
+# H2 Database
+*.db
+*.h2.db
+h2-server/
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
