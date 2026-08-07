@@ -12,7 +12,7 @@
 	<artifactId>resourcehub</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ResourceHub</name>
-	<description/>
+	<description>ResourceHub Backend - Booking and Lending System</description>
 	<url/>
 	<licenses>
 		<license/>
