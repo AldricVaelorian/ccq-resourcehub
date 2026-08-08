@@ -1,38 +1,66 @@
-# Test Website
+# ResourceHub - Monorepo
 
-This is a simple test website built with HTML, CSS, and JavaScript.
+ResourceHub is a booking and lending system for shared resources such as rooms, vehicles, technical devices, and workspaces.
 
-## Features
+## Project Structure
 
-- Responsive design that works on mobile and desktop
-- Interactive elements including buttons and forms
-- Smooth scrolling navigation
-- Animated section transitions
-- Keyboard shortcuts
+```
+ccq-resourcehub/
+├── backend/      # Spring Boot backend application
+├── frontend/     # React frontend application
+└── docs/         # Project documentation
+```
 
-## Files
+## Development Setup
 
-- `index.html` - Main HTML structure
-- `styles.css` - CSS styling
-- `script.js` - JavaScript functionality
+### Prerequisites
 
-## How to Use
+- Java 25 (LTS)
+- Node.js 20+ (LTS)
+- Maven 3.9+
+- PostgreSQL 18 (for local development)
 
-1. Save all three files in the same directory
-2. Open `index.html` in any modern web browser
-3. Interact with the website:
-   - Click the "Click Me!" button to see an animated message
-   - Fill out and submit the contact form
-   - Navigate using the menu items
-   - Press 'C' key to change background color
+### Quick Start
 
-## Customization
+#### Backend
 
-You can modify any aspect of the website by editing the respective files:
-- Change colors, fonts, and layout in `styles.css`
-- Add new functionality in `script.js`
-- Modify content and structure in `index.html`
+```bash
+cd backend
+./mvnw spring-boot:run
+```
 
-## Requirements
+#### Frontend
 
-- Modern web browser (Chrome, Firefox, Safari, Edge, etc.)# ccq-resourcehub
+```bash
+cd frontend
+npm install
+npm start
+```
+
+## Project Goals
+
+ResourceHub supports:
+
+- User and role management
+- Resource and resource category management
+- Availability and opening hours
+- Single and recurring bookings
+- Overlap detection
+- Approval workflows for restricted resources
+- Maintenance and blocked time periods
+- Waitlists and automatic promotion
+- Lending and return documentation
+- Cancellations
+- Simulated notifications
+- Audit logging
+- Resource usage statistics
+
+## Development Guidelines
+
+- Backend follows layered Spring Boot architecture: controller → service → repository → database
+- Frontend uses React with modern patterns
+- All documentation is maintained in the `docs/` directory
+
+## License
+
+[Add license information here]
