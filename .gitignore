@@ -22,6 +22,9 @@ dist-ssr/
 .settings/
 .gradle/
 .mvn/
+!backend/.mvn/
+!backend/.mvn/wrapper/
+!backend/.mvn/wrapper/maven-wrapper.properties
 tmp/
 temp/
 
