@@ -17,7 +17,6 @@ ccq-resourcehub/
 
 - Java 25 (LTS)
 - Node.js 20+ (LTS)
-- Maven 3.9+
 - PostgreSQL 18 (for local development)
 
 ### Quick Start
@@ -28,6 +27,9 @@ ccq-resourcehub/
 cd backend
 ./mvnw spring-boot:run
 ```
+
+The Maven wrapper downloads the project's pinned Maven version automatically;
+a separate Maven installation is not required.
 
 #### Frontend
 

@@ -6,7 +6,7 @@ Spring Boot backend application for ResourceHub booking and lending system.
 
 - Java 25 (LTS)
 - Spring Boot 4.1
-- Maven 3.9+
+- Maven 3.9.16 (downloaded automatically by the Maven wrapper)
 - PostgreSQL 18
 - Flyway for database migrations
 
@@ -15,7 +15,6 @@ Spring Boot backend application for ResourceHub booking and lending system.
 ### Prerequisites
 
 - Java 25 (LTS)
-- Maven 3.9+
 - PostgreSQL 18
 
 ### Database Setup
@@ -28,11 +27,14 @@ CREATE USER resourcehub_user WITH PASSWORD 'resourcehub_pass';
 GRANT ALL PRIVILEGES ON DATABASE resourcehub TO resourcehub_user;
 ```
 
-### Build
+### Compile production sources
 
 ```bash
-./mvnw clean install -DskipTests
+./mvnw -Dmaven.test.skip=true compile
 ```
+
+The Maven wrapper downloads Maven 3.9.16 on first use, so no system-wide
+Maven installation is required.
 
 ### Run
 
@@ -49,8 +51,10 @@ The application will start on `http://localhost:8080`
 | `SPRING_DATASOURCE_URL` | PostgreSQL connection URL | `jdbc:postgresql://localhost:5432/resourcehub` |
 | `SPRING_DATASOURCE_USERNAME` | Database username | `resourcehub_user` |
 | `SPRING_DATASOURCE_PASSWORD` | Database password | `resourcehub_pass` |
-| `SPRING_JPA_HIBERNATE_DDL_AUTO` | DDL mode | `update` |
 | `SERVER_PORT` | Application port | `8080` |
+
+The default JPA schema mode is `validate`; schema changes must be supplied as
+Flyway migrations rather than generated automatically.
 
 ## Project Structure
 
@@ -89,10 +93,10 @@ Run tests (handled by Test Agent):
 ./mvnw test
 ```
 
-## Build without Tests
+## Package without compiling or running tests
 
 For CI/development builds without test execution:
 
 ```bash
-./mvnw clean install -DskipTests
+./mvnw -Dmaven.test.skip=true package
 ```
