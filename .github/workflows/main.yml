@@ -2,7 +2,9 @@ name: CI/CD
 
 on:
   push:
+    branches: [main, feature/**]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -18,34 +20,37 @@ env:
 
 jobs:
   test:
-    name: Test
+    name: Run tests
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Set up Java
+      - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
+      - name: Build with Maven
+        run: ./backend/mvnw clean install -DskipTests
+
       - name: Run tests
         run: ./backend/mvnw test
 
-      - name: Upload test artifacts
-        uses: actions/upload-artifact@v6
+      - name: Upload test results
+        uses: actions/upload-artifact@v7
         with:
-          name: test-target
-          path: target/
-          if-no-files-found: error
+          name: test-results
+          path: backend/target/surefire-reports/
+          if-no-files-found: warn
 
-      - name: Upload JaCoCo coverage report
-        uses: actions/upload-artifact@v6
+      - name: Upload JaCoCo coverage
+        uses: actions/upload-artifact@v7
         with:
           name: jacoco-coverage
-          path: target/site/jacoco/jacoco.xml
+          path: backend/target/site/jacoco/
           if-no-files-found: warn
 
   quality:
@@ -53,10 +58,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Set up Java
+      - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -72,10 +77,10 @@ jobs:
     needs: test
     continue-on-error: true
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Set up Java
+      - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -83,13 +88,13 @@ jobs:
           cache: maven
 
       - name: Run PIT mutation tests
-        run: ./backend/mvnw pitest:mutationCoverage
+        run: ./backend/mvnw pitest:mutationCoverage -DskipTests
 
-      - name: Upload PIT mutation report
-        uses: actions/upload-artifact@v6
+      - name: Upload PIT report
+        uses: actions/upload-artifact@v7
         with:
           name: pit-mutation-report
-          path: target/pit-reports/
+          path: backend/target/pit-reports/
           if-no-files-found: warn
 
   sast:
@@ -100,24 +105,14 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v7
-
-      - name: Set up Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: maven
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: java-kotlin
-          build-mode: manual
-
-      - name: Build for CodeQL
-        run: ./backend/mvnw package -DskipTests
+          languages: java
+          build-mode: auto
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
