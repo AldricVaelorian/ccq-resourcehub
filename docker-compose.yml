@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18
+    container_name: resourcehub-postgres
+    environment:
+      POSTGRES_DB: resourcehub
+      POSTGRES_USER: resourcehub_user
+      POSTGRES_PASSWORD: resourcehub_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resourcehub_user -d resourcehub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
