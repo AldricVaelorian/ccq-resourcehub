@@ -33,10 +33,6 @@ The database will be available at `localhost:5432` with the default credentials.
 
 Create a PostgreSQL database for development:
 
-### Database Setup
-
-Create a PostgreSQL database for development:
-
 ```sql
 CREATE DATABASE resourcehub;
 CREATE USER resourcehub_user WITH PASSWORD 'resourcehub_pass';
@@ -73,10 +69,16 @@ docker-compose up -d postgres
 # Run the backend application
 ./mvnw spring-boot:run
 
-# Stop services when done
+# Stop services when done (keeps database data)
+docker-compose stop
+
+# Restart services after stop
+docker-compose start
+
+# Stop and remove containers, networks, and volumes (deletes database data)
 docker-compose down
 
-# To stop and remove volumes (database data)
+# To stop and remove volumes explicitly (database data)
 docker-compose down -v
 ```
 
