@@ -17,11 +17,23 @@ ccq-resourcehub/
 
 - Java 25 (LTS)
 - Node.js 20+ (LTS)
-- PostgreSQL 18 (for local development)
+- Docker Compose (for local PostgreSQL via containers)
 
 ### Quick Start
 
-#### Backend
+#### Option 1: With Docker Compose (Recommended)
+
+Start PostgreSQL with Docker Compose:
+
+```bash
+docker-compose up -d postgres
+```
+
+Then start the backend and frontend as described below.
+
+#### Option 2: Local Development (without Docker)
+
+##### Backend
 
 ```bash
 cd backend
@@ -31,7 +43,7 @@ cd backend
 The Maven wrapper downloads the project's pinned Maven version automatically;
 a separate Maven installation is not required.
 
-#### Frontend
+##### Frontend
 
 ```bash
 cd frontend
