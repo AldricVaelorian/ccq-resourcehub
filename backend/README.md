@@ -15,7 +15,23 @@ Spring Boot backend application for ResourceHub booking and lending system.
 ### Prerequisites
 
 - Java 25 (LTS)
-- PostgreSQL 18
+- Docker Compose (for optional containerized development)
+
+### Database Setup
+
+#### Option 1: Using Docker Compose (Recommended for local development)
+
+Start PostgreSQL with Docker Compose:
+
+```bash
+docker-compose up -d postgres
+```
+
+The database will be available at `localhost:5432` with the default credentials.
+
+#### Option 2: Local PostgreSQL installation
+
+Create a PostgreSQL database for development:
 
 ### Database Setup
 
@@ -43,6 +59,26 @@ Maven installation is required.
 ```
 
 The application will start on `http://localhost:8080`
+
+### Docker Compose
+
+For local development with a containerized PostgreSQL database:
+
+```bash
+# Start PostgreSQL
+docker-compose up -d postgres
+
+# Wait for database to be ready (about 10-15 seconds)
+
+# Run the backend application
+./mvnw spring-boot:run
+
+# Stop services when done
+docker-compose down
+
+# To stop and remove volumes (database data)
+docker-compose down -v
+```
 
 ### Environment Variables
 
