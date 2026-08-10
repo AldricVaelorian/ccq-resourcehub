@@ -4,30 +4,28 @@ React frontend application for ResourceHub booking and lending system.
 
 ## Tech Stack
 
-- React 18+
-- TypeScript
-- Vite (build tool)
-- Tailwind CSS
-- TanStack Query (data fetching)
-- Axios (HTTP client)
+- React 19
+- TypeScript 6
+- Vite 8
+- Tailwind CSS 4
 
 ## Development
 
 ### Prerequisites
 
-- Node.js 20+ (LTS)
-- npm 10+
+- Node.js 24 (LTS)
+- npm 11+
 
 ### Install Dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
 ### Run Development Server
 
 ```bash
-npm start
+npm run dev
 ```
 
 The application will start on `http://localhost:5173`
@@ -65,25 +63,27 @@ frontend/
 
 ## Environment Variables
 
+Copy `.env.example` to `.env.local` to override local configuration. Only
+variables prefixed with `VITE_` are exposed to frontend code.
+
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | `http://localhost:8080/api` |
+| `VITE_API_URL` | Backend API base URL for future API integration | `/api` |
 
 ## Available Scripts
 
-- `npm start` - Start development server with hot reload
+- `npm run dev` - Start development server with hot reload
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
+- `npm run typecheck` - Run TypeScript type checking
 
 ## Development Guidelines
 
 - Follow React best practices and hooks conventions
 - Use TypeScript for type safety
 - Implement responsive design with mobile-first approach
-- Write unit tests for components and hooks
-- Use TanStack Query for data fetching and caching
+- Keep backend URLs in `VITE_` environment variables
 
 ## Integration with Backend
 

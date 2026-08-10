@@ -1,6 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-200: #bfdbfe;
+  --color-primary-600: #2563eb;
+}
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -8,8 +12,8 @@
   font-weight: 400;
 
   color-scheme: light;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: #111827;
+  background-color: #f9fafb;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,8 +23,6 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
