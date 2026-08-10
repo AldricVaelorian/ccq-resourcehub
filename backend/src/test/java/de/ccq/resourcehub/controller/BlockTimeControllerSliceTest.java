@@ -25,6 +25,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+/**
+ * Slice test for BlockTimeController.
+ * Tests only the controller layer using MockMvc without loading full Spring context.
+ */
 @WebMvcTest(BlockTimeController.class)
 @DisplayName("BlockTimeController Slice Test")
 class BlockTimeControllerSliceTest {
