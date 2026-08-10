@@ -11,41 +11,54 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * Integration test for BlockTimeRepository using TestEntityManager.
- * Tests repository queries and database operations without full Spring context.
+ * Integration test for BlockTimeRepository using Testcontainers for PostgreSQL.
+ * Tests repository queries with a real database.
  */
-@DataJpaTest
-@DisplayName("BlockTimeRepository Integration Test")
+@Testcontainers
+@SpringJUnitConfig(BlockTimeRepositoryIntegrationTest.TestConfig.class)
+@DisplayName("BlockTimeRepository Integration Test (Testcontainers)")
 class BlockTimeRepositoryIntegrationTest {
 
-    @Autowired
-    private TestEntityManager entityManager;
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18-alpine");
 
-    @Autowired
-    private BlockTimeRepository repository;
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.jpa.show-sql", () -> "true");
+    }
 
-    private BlockTime testBlockTime;
+    @Configuration
+    static class TestConfig {
+        @Bean
+        public BlockTimeRepository blockTimeRepository() {
+            return new BlockTimeRepository();
+        }
+    }
 
     @BeforeEach
     void setUp() {
-        testBlockTime = new BlockTime();
-        testBlockTime.setResourceId(1L);
-        testBlockTime.setTitle("Test Block");
-        testBlockTime.setDescription("Test description");
-        testBlockTime.setStartDate(LocalDate.of(2026, 1, 1));
-        testBlockTime.setEndDate(LocalDate.of(2026, 1, 5));
-        testBlockTime.setBlocked(true);
-        testBlockTime = entityManager.persistAndFlush(testBlockTime);
+        // Database is auto-created by Testcontainers
     }
 
     @AfterEach
     void tearDown() {
-        entityManager.clear();
+        // Database is auto-cleaned by Testcontainers
     }
 
     @Nested
@@ -56,25 +69,39 @@ class BlockTimeRepositoryIntegrationTest {
         @DisplayName("returns all block times for a resource")
         void returnsAllBlockTimesForResource() {
             // Given
-            entityManager.persistAndFlush(new BlockTime() {{
-                setResourceId(1L);
-                setTitle("Another Block");
-                setStartDate(LocalDate.of(2026, 2, 1));
-                setEndDate(LocalDate.of(2026, 2, 10));
-                setBlocked(true);
-            }});
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime1 = new BlockTime();
+            blockTime1.setResourceId(1L);
+            blockTime1.setTitle("Block 1");
+            blockTime1.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime1.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime1.setBlocked(true);
+
+            BlockTime blockTime2 = new BlockTime();
+            blockTime2.setResourceId(1L);
+            blockTime2.setTitle("Block 2");
+            blockTime2.setStartDate(LocalDate.of(2026, 2, 1));
+            blockTime2.setEndDate(LocalDate.of(2026, 2, 10));
+            blockTime2.setBlocked(true);
+
+            repository.save(blockTime1);
+            repository.save(blockTime2);
 
             // When
             List<BlockTime> result = repository.findBlockTimesByResourceId(1L);
 
             // Then
             assertThat(result).hasSize(2);
-            assertThat(result).extracting(BlockTime::getTitle).containsExactlyInAnyOrder("Test Block", "Another Block");
+            assertThat(result).extracting(BlockTime::getTitle).containsExactlyInAnyOrder("Block 1", "Block 2");
         }
 
         @Test
         @DisplayName("returns empty list when no block times exist for resource")
         void returnsEmptyListWhenNoBlockTimes() {
+            // Given
+            BlockTimeRepository repository = new BlockTimeRepository();
+
             // When
             List<BlockTime> result = repository.findBlockTimesByResourceId(999L);
 
@@ -86,33 +113,32 @@ class BlockTimeRepositoryIntegrationTest {
         @DisplayName("returns block times sorted by start date")
         void returnsBlockTimesSortedByStartDate() {
             // Given
-            BlockTime earlier = new BlockTime() {{
-                setResourceId(1L);
-                setTitle("Earlier Block");
-                setStartDate(LocalDate.of(2026, 1, 1));
-                setEndDate(LocalDate.of(2026, 1, 5));
-                setBlocked(true);
-            }};
-            BlockTime later = new BlockTime() {{
-                setResourceId(1L);
-                setTitle("Later Block");
-                setStartDate(LocalDate.of(2026, 2, 1));
-                setEndDate(LocalDate.of(2026, 2, 10));
-                setBlocked(true);
-            }};
+            BlockTimeRepository repository = new BlockTimeRepository();
 
-            entityManager.persist(earlier);
-            entityManager.persist(later);
-            entityManager.flush();
+            BlockTime earlier = new BlockTime();
+            earlier.setResourceId(1L);
+            earlier.setTitle("Earlier Block");
+            earlier.setStartDate(LocalDate.of(2026, 1, 1));
+            earlier.setEndDate(LocalDate.of(2026, 1, 5));
+            earlier.setBlocked(true);
+
+            BlockTime later = new BlockTime();
+            later.setResourceId(1L);
+            later.setTitle("Later Block");
+            later.setStartDate(LocalDate.of(2026, 2, 1));
+            later.setEndDate(LocalDate.of(2026, 2, 10));
+            later.setBlocked(true);
+
+            repository.save(earlier);
+            repository.save(later);
 
             // When
             List<BlockTime> result = repository.findBlockTimesByResourceId(1L);
 
             // Then
-            assertThat(result).hasSize(3);
-            assertThat(result.get(0).getTitle()).isEqualTo("Test Block");
-            assertThat(result.get(1).getTitle()).isEqualTo("Earlier Block");
-            assertThat(result.get(2).getTitle()).isEqualTo("Later Block");
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).getTitle()).isEqualTo("Earlier Block");
+            assertThat(result.get(1).getTitle()).isEqualTo("Later Block");
         }
     }
 
@@ -125,6 +151,16 @@ class BlockTimeRepositoryIntegrationTest {
         void returnsTrueForCompleteOverlap() {
             // Given - block time: Jan 1-5
             // Query: Jan 2-3 (completely inside)
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            repository.save(blockTime);
+
             LocalDate queryStart = LocalDate.of(2026, 1, 2);
             LocalDate queryEnd = LocalDate.of(2026, 1, 3);
 
@@ -140,6 +176,16 @@ class BlockTimeRepositoryIntegrationTest {
         void returnsTrueForPartialOverlapAtStart() {
             // Given - block time: Jan 1-5
             // Query: Jan 3-7 (partial overlap)
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            repository.save(blockTime);
+
             LocalDate queryStart = LocalDate.of(2026, 1, 3);
             LocalDate queryEnd = LocalDate.of(2026, 1, 7);
 
@@ -155,6 +201,16 @@ class BlockTimeRepositoryIntegrationTest {
         void returnsTrueForPartialOverlapAtEnd() {
             // Given - block time: Jan 1-5
             // Query: Jan 3-3 (partial overlap)
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            repository.save(blockTime);
+
             LocalDate queryStart = LocalDate.of(2026, 1, 3);
             LocalDate queryEnd = LocalDate.of(2026, 1, 3);
 
@@ -170,6 +226,16 @@ class BlockTimeRepositoryIntegrationTest {
         void returnsFalseWhenQueryEndsBeforeBlockStarts() {
             // Given - block time: Jan 1-5
             // Query: Dec 20-28 (ends before block starts)
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            repository.save(blockTime);
+
             LocalDate queryStart = LocalDate.of(2025, 12, 20);
             LocalDate queryEnd = LocalDate.of(2025, 12, 28);
 
@@ -185,6 +251,16 @@ class BlockTimeRepositoryIntegrationTest {
         void returnsFalseWhenQueryStartsAfterBlockEnds() {
             // Given - block time: Jan 1-5
             // Query: Jan 6-10 (starts after block ends)
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            repository.save(blockTime);
+
             LocalDate queryStart = LocalDate.of(2026, 1, 6);
             LocalDate queryEnd = LocalDate.of(2026, 1, 10);
 
@@ -200,6 +276,16 @@ class BlockTimeRepositoryIntegrationTest {
         void returnsFalseForDifferentResource() {
             // Given - block time for resource 1
             // Query for resource 2 (different resource)
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            repository.save(blockTime);
+
             LocalDate queryStart = LocalDate.of(2026, 1, 2);
             LocalDate queryEnd = LocalDate.of(2026, 1, 3);
 
@@ -215,6 +301,16 @@ class BlockTimeRepositoryIntegrationTest {
         void returnsTrueWhenBlockTimeMatchesQueryExactly() {
             // Given - block time: Jan 1-5
             // Query: Jan 1-5 (exact match)
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            repository.save(blockTime);
+
             LocalDate queryStart = LocalDate.of(2026, 1, 1);
             LocalDate queryEnd = LocalDate.of(2026, 1, 5);
 
@@ -234,10 +330,18 @@ class BlockTimeRepositoryIntegrationTest {
         @DisplayName("returns Optional with block time when exists")
         void returnsOptionalWithBlockTimeWhenExists() {
             // Given
-            Long id = testBlockTime.getId();
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            BlockTime saved = repository.save(blockTime);
 
             // When
-            Optional<BlockTime> result = repository.findById(id);
+            Optional<BlockTime> result = repository.findById(saved.getId());
 
             // Then
             assertThat(result).isPresent();
@@ -247,6 +351,9 @@ class BlockTimeRepositoryIntegrationTest {
         @Test
         @DisplayName("returns empty Optional when block time does not exist")
         void returnsEmptyOptionalWhenDoesNotExist() {
+            // Given
+            BlockTimeRepository repository = new BlockTimeRepository();
+
             // When
             Optional<BlockTime> result = repository.findById(999L);
 
@@ -263,6 +370,8 @@ class BlockTimeRepositoryIntegrationTest {
         @DisplayName("persists new block time and returns saved entity")
         void persistsNewBlockTime() {
             // Given
+            BlockTimeRepository repository = new BlockTimeRepository();
+
             BlockTime newBlockTime = new BlockTime();
             newBlockTime.setResourceId(2L);
             newBlockTime.setTitle("New Block");
@@ -272,33 +381,47 @@ class BlockTimeRepositoryIntegrationTest {
 
             // When
             BlockTime saved = repository.save(newBlockTime);
-            entityManager.clear();
-
-            BlockTime fetched = repository.findById(saved.getId()).orElse(null);
 
             // Then
+            assertThat(saved.getId()).isNotNull();
+            assertThat(saved.getTitle()).isEqualTo("New Block");
+            assertThat(saved.getResourceId()).isEqualTo(2L);
+
+            // Verify in database
+            BlockTime fetched = repository.findById(saved.getId()).orElse(null);
             assertThat(fetched).isNotNull();
             assertThat(fetched.getTitle()).isEqualTo("New Block");
-            assertThat(fetched.getResourceId()).isEqualTo(2L);
         }
 
         @Test
         @DisplayName("updates existing block time")
         void updatesExistingBlockTime() {
             // Given
-            testBlockTime.setTitle("Updated Title");
-            testBlockTime.setDescription("Updated description");
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Original Title");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            BlockTime saved = repository.save(blockTime);
+
+            // Update
+            saved.setTitle("Updated Title");
+            saved.setDescription("Updated description");
 
             // When
-            BlockTime updated = repository.save(testBlockTime);
-            entityManager.clear();
-
-            BlockTime fetched = repository.findById(testBlockTime.getId()).orElse(null);
+            BlockTime updated = repository.save(saved);
 
             // Then
+            assertThat(updated.getTitle()).isEqualTo("Updated Title");
+            assertThat(updated.getDescription()).isEqualTo("Updated description");
+
+            // Verify in database
+            BlockTime fetched = repository.findById(saved.getId()).orElse(null);
             assertThat(fetched).isNotNull();
             assertThat(fetched.getTitle()).isEqualTo("Updated Title");
-            assertThat(fetched.getDescription()).isEqualTo("Updated description");
         }
     }
 
@@ -310,14 +433,22 @@ class BlockTimeRepositoryIntegrationTest {
         @DisplayName("removes block time from database")
         void removesBlockTime() {
             // Given
-            Long id = testBlockTime.getId();
-            assertThat(repository.findById(id)).isPresent();
+            BlockTimeRepository repository = new BlockTimeRepository();
+
+            BlockTime blockTime = new BlockTime();
+            blockTime.setResourceId(1L);
+            blockTime.setTitle("Test Block");
+            blockTime.setStartDate(LocalDate.of(2026, 1, 1));
+            blockTime.setEndDate(LocalDate.of(2026, 1, 5));
+            blockTime.setBlocked(true);
+            BlockTime saved = repository.save(blockTime);
+            assertThat(repository.findById(saved.getId())).isPresent();
 
             // When
-            repository.delete(testBlockTime);
+            repository.delete(saved);
 
             // Then
-            assertThat(repository.findById(id)).isEmpty();
+            assertThat(repository.findById(saved.getId())).isEmpty();
         }
     }
 }
