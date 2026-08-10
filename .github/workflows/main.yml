@@ -114,9 +114,10 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
 
-      - name: Run PIT mutation tests
+      - name: Compile tests and run PIT mutation tests
         run: >
           ./mvnw
+          test-compile
           org.pitest:pitest-maven:${{ env.PITEST_VERSION }}:mutationCoverage
 
       - name: Upload PIT report
@@ -130,10 +131,6 @@ jobs:
   sast:
     name: CodeQL SAST
     runs-on: ubuntu-latest
-
-    # Code scanning is currently disabled in the repository settings.
-    # Keep SAST informative rather than blocking the entire pipeline until
-    # GitHub code scanning is enabled for the repository.
     continue-on-error: true
 
     permissions:
