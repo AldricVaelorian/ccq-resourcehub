@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.ccq.resourcehub.entity.BlockTime;
 import de.ccq.resourcehub.service.BlockTimeService;
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -36,13 +38,17 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class BlockTimeControllerSliceTest {
 
     private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
     private BlockTimeService blockTimeService;
     private BlockTime sampleBlockTime;
 
     @BeforeEach
     void setUp() {
         blockTimeService = mock(BlockTimeService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new BlockTimeController(blockTimeService)).build();
+        objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        mockMvc = MockMvcBuilders.standaloneSetup(new BlockTimeController(blockTimeService))
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .build();
 
         sampleBlockTime = new BlockTime();
         sampleBlockTime.setId(1L);
@@ -142,7 +148,7 @@ class BlockTimeControllerSliceTest {
         @DisplayName("returns 201 Created when block time is valid")
         void returnsCreatedWhenBlockTimeIsValid() throws Exception {
             // Given
-            String requestBody = new ObjectMapper().writeValueAsString(sampleBlockTime);
+            String requestBody = objectMapper.writeValueAsString(sampleBlockTime);
             when(blockTimeService.createBlockTime(any(BlockTime.class)))
                     .thenReturn(sampleBlockTime);
 
@@ -168,7 +174,7 @@ class BlockTimeControllerSliceTest {
             invalidBlockTime.setStartDate(LocalDate.of(2026, 1, 1));
             invalidBlockTime.setEndDate(LocalDate.of(2026, 1, 5));
 
-            String requestBody = new ObjectMapper().writeValueAsString(invalidBlockTime);
+            String requestBody = objectMapper.writeValueAsString(invalidBlockTime);
 
             // When/Then
             mockMvc.perform(post("/api/block-times")
@@ -193,7 +199,7 @@ class BlockTimeControllerSliceTest {
             // Given
             Long blockTimeId = 1L;
             sampleBlockTime.setTitle("Updated Title");
-            String requestBody = new ObjectMapper().writeValueAsString(sampleBlockTime);
+            String requestBody = objectMapper.writeValueAsString(sampleBlockTime);
 
             when(blockTimeService.updateBlockTime(eq(blockTimeId), any(BlockTime.class)))
                     .thenReturn(sampleBlockTime);
@@ -220,7 +226,10 @@ class BlockTimeControllerSliceTest {
             invalidBlockTime.setStartDate(LocalDate.of(2026, 1, 10));
             invalidBlockTime.setEndDate(LocalDate.of(2026, 1, 5)); // End before start
 
-            String requestBody = new ObjectMapper().writeValueAsString(invalidBlockTime);
+            when(blockTimeService.updateBlockTime(eq(1L), any(BlockTime.class)))
+                    .thenThrow(new IllegalArgumentException("Start date must be before or equal to end date"));
+
+            String requestBody = objectMapper.writeValueAsString(invalidBlockTime);
 
             // When/Then
             mockMvc.perform(put("/api/block-times/{id}", 1L)
@@ -241,7 +250,7 @@ class BlockTimeControllerSliceTest {
             when(blockTimeService.updateBlockTime(eq(blockTimeId), any(BlockTime.class)))
                     .thenThrow(IllegalArgumentException.class);
 
-            String requestBody = new ObjectMapper().writeValueAsString(sampleBlockTime);
+            String requestBody = objectMapper.writeValueAsString(sampleBlockTime);
 
             // When/Then
             mockMvc.perform(put("/api/block-times/{id}", blockTimeId)
@@ -313,8 +322,8 @@ class BlockTimeControllerSliceTest {
                     .andExpect(status().isOk())
                     .andExpect(result -> {
                         try {
-                            Boolean response = new ObjectMapper()
-                                    .readValue(result.getResponse().getContentAsString(), Boolean.class);
+                            Boolean response = objectMapper.readValue(
+                                    result.getResponse().getContentAsString(), Boolean.class);
                             assertThat(response).isTrue();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
@@ -345,8 +354,8 @@ class BlockTimeControllerSliceTest {
                     .andExpect(status().isOk())
                     .andExpect(result -> {
                         try {
-                            Boolean response = new ObjectMapper()
-                                    .readValue(result.getResponse().getContentAsString(), Boolean.class);
+                            Boolean response = objectMapper.readValue(
+                                    result.getResponse().getContentAsString(), Boolean.class);
                             assertThat(response).isFalse();
                         } catch (Exception e) {
                             throw new RuntimeException(e);

@@ -131,15 +131,17 @@ class BlockTimeServiceTest {
         void createsBlockTimeWhenValid() {
             // Given
             BlockTime blockTime = createBlockTime(null, 1L, "New Block", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 5));
+            BlockTime savedBlockTime = createBlockTime(1L, 1L, "New Block",
+                    LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 5));
 
-            when(blockTimeRepository.save(blockTime)).thenReturn(blockTime);
+            when(blockTimeRepository.save(blockTime)).thenReturn(savedBlockTime);
 
             // When
             BlockTime result = sut.createBlockTime(blockTime);
 
             // Then
-            assertThat(result).isNotNull();
-            assertThat(result.getId()).isNotNull();
+            assertThat(result).isSameAs(savedBlockTime);
+            assertThat(result.getId()).isEqualTo(1L);
 
             verify(blockTimeRepository).save(blockTime);
             verifyNoMoreInteractions(blockTimeRepository);
@@ -266,10 +268,8 @@ class BlockTimeServiceTest {
         void updatesBlockTimeWhenValid() {
             // Given
             Long blockTimeId = 1L;
-            BlockTime existingBlockTime = createBlockTime(blockTimeId, 1L, "Old Title", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 5));
             BlockTime updatedBlockTime = createBlockTime(blockTimeId, 1L, "New Title", LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 10));
 
-            when(blockTimeRepository.findById(blockTimeId)).thenReturn(Optional.of(existingBlockTime));
             when(blockTimeRepository.save(Mockito.any(BlockTime.class))).thenReturn(updatedBlockTime);
 
             // When
@@ -279,7 +279,6 @@ class BlockTimeServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getTitle()).isEqualTo("New Title");
 
-            verify(blockTimeRepository).findById(blockTimeId);
             verify(blockTimeRepository).save(Mockito.any(BlockTime.class));
             verifyNoMoreInteractions(blockTimeRepository);
         }
