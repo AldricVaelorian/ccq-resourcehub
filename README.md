@@ -47,7 +47,7 @@ a separate Maven installation is not required.
 
 ```bash
 cd frontend
-npm ci
+npm ci --include=dev
 npm run dev
 ```
 

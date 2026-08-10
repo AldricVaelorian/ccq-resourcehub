@@ -19,7 +19,7 @@ React frontend application for ResourceHub booking and lending system.
 ### Install Dependencies
 
 ```bash
-npm ci
+npm ci --include=dev
 ```
 
 ### Run Development Server
@@ -63,12 +63,15 @@ frontend/
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local` to override local configuration. Only
-variables prefixed with `VITE_` are exposed to frontend code.
+`.env.example` reserves the intended API base URL variable for the later API
+integration work. The current frontend scaffold does not read this variable
+yet. When integration is added, copy `.env.example` to `.env.local` to provide
+local values. Only variables prefixed with `VITE_` are exposed to frontend
+code.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API base URL for future API integration | `/api` |
+| Variable | Description | Example value |
+|----------|-------------|---------------|
+| `VITE_API_URL` | Reserved backend API base URL | `/api` |
 
 ## Available Scripts
 
