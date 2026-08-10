@@ -90,6 +90,10 @@ docker-compose down -v
 | `SPRING_DATASOURCE_USERNAME` | Database username | `resourcehub_user` |
 | `SPRING_DATASOURCE_PASSWORD` | Database password | `resourcehub_pass` |
 | `SERVER_PORT` | Application port | `8080` |
+| `FLYWAY_ENABLED` | Enable/disable Flyway | `true` |
+| `FLYWAY_BASELINE_ON_MIGRATE` | Baseline database on migrate | `true` |
+| `FLYWAY_VALIDATE_ON_MIGRATE` | Validate on migrate | `true` |
+| `FLYWAY_MIXED` | Allow mixed migration types | `false` |
 
 The default JPA schema mode is `validate`; schema changes must be supplied as
 Flyway migrations rather than generated automatically.
@@ -116,6 +120,49 @@ backend/
 │           └── de/ccq/resourcehub/
 └── pom.xml
 ```
+
+## Database Migrations
+
+The project uses **Flyway** for database schema versioning and migrations.
+
+### Migration File Naming Convention
+
+Flyway migration files follow the naming pattern:
+```
+V<VERSION>__<DESCRIPTION>.sql
+```
+
+Examples:
+- `V1__Initial_Schema.sql` - Initial database schema
+- `V2__BlockTime_Entity.sql` - Add block_times table
+
+### Running Migrations
+
+Migrations are automatically executed when the application starts. Ensure the
+PostgreSQL database is available and configured correctly before starting the
+application.
+
+### Manual Migration Commands
+
+```bash
+# Check migration status
+./mvnw flyway:status
+
+# Run migrations
+./mvnw flyway:migrate
+
+# Undo last migration (if configured)
+./mvnw flyway:undo
+```
+
+### Environment Variables for Flyway
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `FLYWAY_ENABLED` | Enable/disable Flyway | `true` |
+| `FLYWAY_BASELINE_ON_MIGRATE` | Baseline database on migrate | `true` |
+| `FLYWAY_VALIDATE_ON_MIGRATE` | Validate on migrate | `true` |
+| `FLYWAY_MIXED` | Allow mixed migration types | `false` |
 
 ## API Documentation
 
