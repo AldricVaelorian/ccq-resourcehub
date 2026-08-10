@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrFuture;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -43,7 +42,6 @@ public class BlockTime {
     @Column(name = "title", nullable = false, length = 255)
     private String title;
 
-    @NotBlank
     @Size(max = 1000)
     @Column(name = "description", length = 1000)
     private String description;
@@ -58,5 +56,5 @@ public class BlockTime {
 
     @NotNull
     @Column(name = "is_blocked", nullable = false)
-    private Boolean isBlocked = true;
+    private boolean isBlocked = true;
 }

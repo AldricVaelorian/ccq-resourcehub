@@ -23,21 +23,6 @@ public interface BlockTimeRepository extends JpaRepository<BlockTime, Long> {
     List<BlockTime> findByResourceIdOrderByStartDateAsc(Long resourceId);
 
     /**
-     * Find all block times that overlap with a given date range.
-     *
-     * @param resourceId the resource ID
-     * @param startDate the start date of the range
-     * @param endDate the end date of the range
-     * @return list of overlapping block times
-     */
-    @Query("SELECT bt FROM BlockTime bt WHERE bt.resourceId = :resourceId " +
-           "AND bt.startDate <= :endDate AND bt.endDate >= :startDate " +
-           "AND bt.isBlocked = true")
-    List<BlockTime> findOverlappingBlockTimes(@Param("resourceId") Long resourceId,
-                                               @Param("startDate") LocalDate startDate,
-                                               @Param("endDate") LocalDate endDate);
-
-    /**
      * Find all block times that start on or before the given end date and end on or after the given start date.
      *
      * @param resourceId the resource ID
