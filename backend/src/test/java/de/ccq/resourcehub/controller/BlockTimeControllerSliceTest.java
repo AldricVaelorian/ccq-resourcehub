@@ -1,6 +1,10 @@
 package de.ccq.resourcehub.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,34 +22,28 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * Slice test for BlockTimeController.
  * Tests only the controller layer using MockMvc without loading full Spring context.
+ * Uses manual controller instantiation for Spring Boot 4.x compatibility.
  */
-@WebMvcTest(BlockTimeController.class)
 @DisplayName("BlockTimeController Slice Test")
 class BlockTimeControllerSliceTest {
 
-    @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
     private BlockTimeService blockTimeService;
-
     private BlockTime sampleBlockTime;
 
     @BeforeEach
     void setUp() {
+        blockTimeService = mock(BlockTimeService.class);
+        mockMvc = MockMvcBuilders.standaloneSetup(new BlockTimeController(blockTimeService)).build();
+
         sampleBlockTime = new BlockTime();
         sampleBlockTime.setId(1L);
         sampleBlockTime.setResourceId(1L);
@@ -68,7 +66,7 @@ class BlockTimeControllerSliceTest {
             BlockTime blockTime1 = createBlockTime(1L, resourceId, "Block 1", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 5));
             BlockTime blockTime2 = createBlockTime(2L, resourceId, "Block 2", LocalDate.of(2026, 1, 10), LocalDate.of(2026, 1, 15));
 
-            Mockito.when(blockTimeService.getAllBlockTimesByResourceId(resourceId))
+            when(blockTimeService.getAllBlockTimesByResourceId(resourceId))
                     .thenReturn(List.of(blockTime1, blockTime2));
 
             // When/Then
@@ -85,7 +83,7 @@ class BlockTimeControllerSliceTest {
         void returnsEmptyListWhenNoBlockTimes() throws Exception {
             // Given
             Long resourceId = 999L;
-            Mockito.when(blockTimeService.getAllBlockTimesByResourceId(resourceId)).thenReturn(List.of());
+            when(blockTimeService.getAllBlockTimesByResourceId(resourceId)).thenReturn(List.of());
 
             // When/Then
             mockMvc.perform(get("/api/block-times/resource/{resourceId}", resourceId)
@@ -106,7 +104,7 @@ class BlockTimeControllerSliceTest {
         void returnsBlockTimeWhenExists() throws Exception {
             // Given
             Long blockTimeId = 1L;
-            Mockito.when(blockTimeService.getBlockTimeById(blockTimeId))
+            when(blockTimeService.getBlockTimeById(blockTimeId))
                     .thenReturn(Optional.of(sampleBlockTime));
 
             // When/Then
@@ -123,7 +121,7 @@ class BlockTimeControllerSliceTest {
         void returnsNotFoundWhenBlockTimeDoesNotExist() throws Exception {
             // Given
             Long blockTimeId = 999L;
-            Mockito.when(blockTimeService.getBlockTimeById(blockTimeId))
+            when(blockTimeService.getBlockTimeById(blockTimeId))
                     .thenReturn(Optional.empty());
 
             // When/Then
@@ -144,8 +142,8 @@ class BlockTimeControllerSliceTest {
         @DisplayName("returns 201 Created when block time is valid")
         void returnsCreatedWhenBlockTimeIsValid() throws Exception {
             // Given
-            String requestBody = objectMapper.writeValueAsString(sampleBlockTime);
-            Mockito.when(blockTimeService.createBlockTime(Mockito.any(BlockTime.class)))
+            String requestBody = new ObjectMapper().writeValueAsString(sampleBlockTime);
+            when(blockTimeService.createBlockTime(any(BlockTime.class)))
                     .thenReturn(sampleBlockTime);
 
             // When/Then
@@ -157,7 +155,7 @@ class BlockTimeControllerSliceTest {
                     .andReturn();
 
             // Verify
-            Mockito.verify(blockTimeService).createBlockTime(Mockito.any(BlockTime.class));
+            Mockito.verify(blockTimeService).createBlockTime(any(BlockTime.class));
         }
 
         @Test
@@ -170,7 +168,7 @@ class BlockTimeControllerSliceTest {
             invalidBlockTime.setStartDate(LocalDate.of(2026, 1, 1));
             invalidBlockTime.setEndDate(LocalDate.of(2026, 1, 5));
 
-            String requestBody = objectMapper.writeValueAsString(invalidBlockTime);
+            String requestBody = new ObjectMapper().writeValueAsString(invalidBlockTime);
 
             // When/Then
             mockMvc.perform(post("/api/block-times")
@@ -195,9 +193,9 @@ class BlockTimeControllerSliceTest {
             // Given
             Long blockTimeId = 1L;
             sampleBlockTime.setTitle("Updated Title");
-            String requestBody = objectMapper.writeValueAsString(sampleBlockTime);
+            String requestBody = new ObjectMapper().writeValueAsString(sampleBlockTime);
 
-            Mockito.when(blockTimeService.updateBlockTime(Mockito.eq(blockTimeId), Mockito.any(BlockTime.class)))
+            when(blockTimeService.updateBlockTime(eq(blockTimeId), any(BlockTime.class)))
                     .thenReturn(sampleBlockTime);
 
             // When/Then
@@ -208,7 +206,7 @@ class BlockTimeControllerSliceTest {
                     .andExpect(status().isOk());
 
             // Verify
-            Mockito.verify(blockTimeService).updateBlockTime(Mockito.eq(blockTimeId), Mockito.any(BlockTime.class));
+            Mockito.verify(blockTimeService).updateBlockTime(eq(blockTimeId), any(BlockTime.class));
         }
 
         @Test
@@ -222,7 +220,7 @@ class BlockTimeControllerSliceTest {
             invalidBlockTime.setStartDate(LocalDate.of(2026, 1, 10));
             invalidBlockTime.setEndDate(LocalDate.of(2026, 1, 5)); // End before start
 
-            String requestBody = objectMapper.writeValueAsString(invalidBlockTime);
+            String requestBody = new ObjectMapper().writeValueAsString(invalidBlockTime);
 
             // When/Then
             mockMvc.perform(put("/api/block-times/{id}", 1L)
@@ -232,7 +230,7 @@ class BlockTimeControllerSliceTest {
                     .andExpect(status().isBadRequest());
 
             // Verify service was called but threw exception
-            Mockito.verify(blockTimeService).updateBlockTime(Mockito.eq(1L), Mockito.any(BlockTime.class));
+            Mockito.verify(blockTimeService).updateBlockTime(eq(1L), any(BlockTime.class));
         }
 
         @Test
@@ -240,10 +238,10 @@ class BlockTimeControllerSliceTest {
         void returnsBadRequestWhenBlockTimeDoesNotExist() throws Exception {
             // Given
             Long blockTimeId = 999L;
-            Mockito.when(blockTimeService.updateBlockTime(Mockito.eq(blockTimeId), Mockito.any(BlockTime.class)))
+            when(blockTimeService.updateBlockTime(eq(blockTimeId), any(BlockTime.class)))
                     .thenThrow(IllegalArgumentException.class);
 
-            String requestBody = objectMapper.writeValueAsString(sampleBlockTime);
+            String requestBody = new ObjectMapper().writeValueAsString(sampleBlockTime);
 
             // When/Then
             mockMvc.perform(put("/api/block-times/{id}", blockTimeId)
@@ -253,7 +251,7 @@ class BlockTimeControllerSliceTest {
                     .andExpect(status().isBadRequest());
 
             // Verify
-            Mockito.verify(blockTimeService).updateBlockTime(Mockito.eq(blockTimeId), Mockito.any(BlockTime.class));
+            Mockito.verify(blockTimeService).updateBlockTime(eq(blockTimeId), any(BlockTime.class));
         }
     }
 
@@ -303,7 +301,7 @@ class BlockTimeControllerSliceTest {
             LocalDate startDate = LocalDate.of(2026, 1, 5);
             LocalDate endDate = LocalDate.of(2026, 1, 10);
 
-            Mockito.when(blockTimeService.hasOverlappingBlockTimes(resourceId, startDate, endDate))
+            when(blockTimeService.hasOverlappingBlockTimes(resourceId, startDate, endDate))
                     .thenReturn(true);
 
             // When/Then
@@ -315,7 +313,8 @@ class BlockTimeControllerSliceTest {
                     .andExpect(status().isOk())
                     .andExpect(result -> {
                         try {
-                            Boolean response = objectMapper.readValue(result.getResponse().getContentAsString(), Boolean.class);
+                            Boolean response = new ObjectMapper()
+                                    .readValue(result.getResponse().getContentAsString(), Boolean.class);
                             assertThat(response).isTrue();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
@@ -334,7 +333,7 @@ class BlockTimeControllerSliceTest {
             LocalDate startDate = LocalDate.of(2026, 1, 20);
             LocalDate endDate = LocalDate.of(2026, 1, 25);
 
-            Mockito.when(blockTimeService.hasOverlappingBlockTimes(resourceId, startDate, endDate))
+            when(blockTimeService.hasOverlappingBlockTimes(resourceId, startDate, endDate))
                     .thenReturn(false);
 
             // When/Then
@@ -346,7 +345,8 @@ class BlockTimeControllerSliceTest {
                     .andExpect(status().isOk())
                     .andExpect(result -> {
                         try {
-                            Boolean response = objectMapper.readValue(result.getResponse().getContentAsString(), Boolean.class);
+                            Boolean response = new ObjectMapper()
+                                    .readValue(result.getResponse().getContentAsString(), Boolean.class);
                             assertThat(response).isFalse();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
