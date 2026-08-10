@@ -16,7 +16,7 @@ ccq-resourcehub/
 ### Prerequisites
 
 - Java 25 (LTS)
-- Node.js 20+ (LTS)
+- Node.js 24 (LTS) with npm 11+
 - Docker Compose (for local PostgreSQL via containers)
 
 ### Quick Start
@@ -47,8 +47,8 @@ a separate Maven installation is not required.
 
 ```bash
 cd frontend
-npm install
-npm start
+npm ci --include=dev
+npm run dev
 ```
 
 ## Project Goals
