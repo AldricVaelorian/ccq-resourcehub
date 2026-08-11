@@ -29,10 +29,10 @@ class FlywayMigrationIntegrationTest {
         var result = flyway.migrate();
 
         // assert
-        assertThat(result.migrationsExecuted).isEqualTo(4);
+        assertThat(result.migrationsExecuted).isEqualTo(5);
         assertThat(flyway.info().applied())
                 .extracting(migration -> migration.getVersion().getVersion())
-                .containsExactly("1", "2", "3", "4");
+                .containsExactly("1", "2", "3", "4", "5");
         assertThat(publicTables())
                 .containsExactlyInAnyOrder(
                         "availability_rules",
@@ -50,6 +50,7 @@ class FlywayMigrationIntegrationTest {
                         "idx_availability_rules_active");
         assertThat(indexesFor("bookings"))
                 .contains("bookings_pkey", "idx_bookings_resource_status_dates");
+        assertThat(columnsFor("bookings")).contains("rejected_at", "rejection_reason");
     }
 
     private List<String> publicTables() throws SQLException {
@@ -82,5 +83,17 @@ class FlywayMigrationIntegrationTest {
             }
         }
         return indexes;
+    }
+
+    private List<String> columnsFor(String tableName) throws SQLException {
+        var columns = new ArrayList<String>();
+        try (var connection = DriverManager.getConnection(
+                        postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+                var result = connection.getMetaData().getColumns(null, "public", tableName, null)) {
+            while (result.next()) {
+                columns.add(result.getString("COLUMN_NAME"));
+            }
+        }
+        return columns;
     }
 }
