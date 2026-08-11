@@ -30,17 +30,12 @@ class FlywayMigrationIntegrationTest {
 
         // assert
         assertThat(result.migrationsExecuted).isEqualTo(2);
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("2");
-        assertThat(publicTables()).contains(
-                "users",
-                "resource_categories",
-                "resources",
-                "bookings",
-                "lending_records",
-                "blocked_times",
-                "audit_log",
-                "block_times",
-                "flyway_schema_history");
+        assertThat(flyway.info().applied())
+                .extracting(migration -> migration.getVersion().getVersion())
+                .containsExactly("1", "2");
+        assertThat(publicTables()).containsExactlyInAnyOrder("block_times", "flyway_schema_history");
+        assertThat(blockTimeIndexes())
+                .contains("block_times_pkey", "idx_block_times_resource_id", "idx_block_times_date_range");
     }
 
     private List<String> publicTables() throws SQLException {
@@ -53,5 +48,17 @@ class FlywayMigrationIntegrationTest {
             }
         }
         return tables;
+    }
+
+    private List<String> blockTimeIndexes() throws SQLException {
+        var indexes = new ArrayList<String>();
+        try (var connection = DriverManager.getConnection(
+                        postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+                var result = connection.getMetaData().getIndexInfo(null, "public", "block_times", false, false)) {
+            while (result.next()) {
+                indexes.add(result.getString("INDEX_NAME"));
+            }
+        }
+        return indexes;
     }
 }
