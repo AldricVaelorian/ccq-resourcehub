@@ -7,14 +7,13 @@ import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
-import org.springframework.boot.test.context.ImportAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -27,7 +26,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * Tests JPA behavior, database constraints, and custom queries.
  */
 @DataJpaTest
-@ImportAutoConfiguration(FlywayAutoConfiguration.class)
 @ActiveProfiles("test")
 @Testcontainers
 @DisplayName("BlockTimeRepository Integration Test")
@@ -39,6 +37,13 @@ class BlockTimeRepositoryIntegrationTest {
 
     @DynamicPropertySource
     static void configurePostgres(DynamicPropertyRegistry registry) {
+        Flyway.configure()
+                .dataSource(
+                        postgresqlContainer.getJdbcUrl(),
+                        postgresqlContainer.getUsername(),
+                        postgresqlContainer.getPassword())
+                .load()
+                .migrate();
         registry.add("spring.datasource.url", postgresqlContainer::getJdbcUrl);
         registry.add("spring.datasource.username", postgresqlContainer::getUsername);
         registry.add("spring.datasource.password", postgresqlContainer::getPassword);
