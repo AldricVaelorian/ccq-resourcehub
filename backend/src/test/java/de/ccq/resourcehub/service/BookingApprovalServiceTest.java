@@ -2,6 +2,7 @@ package de.ccq.resourcehub.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -49,6 +50,7 @@ class BookingApprovalServiceTest {
         // arrange
         var booking = booking(7L, BookingStatus.PENDING);
         var manager = manager(11L, true, "MANAGER");
+        when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
         when(bookingRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(booking));
         when(userRepository.findById(11L)).thenReturn(Optional.of(manager));
         when(bookingRepository.existsApprovedOverlap(
@@ -69,13 +71,20 @@ class BookingApprovalServiceTest {
         assertThat(result.approvedAt()).isEqualTo(APPROVAL_TIME);
         assertThat(booking.getStatus()).isEqualTo(BookingStatus.APPROVED);
         assertThat(booking.getApprovedAt()).isEqualTo(APPROVAL_TIME);
-        verify(bookingRepository).save(booking);
+        var inOrder = inOrder(bookingRepository, userRepository);
+        inOrder.verify(bookingRepository).findById(7L);
+        inOrder.verify(bookingRepository).lockResourceAdvisory(3L);
+        inOrder.verify(bookingRepository).findByIdForUpdate(7L);
+        inOrder.verify(userRepository).findById(11L);
+        inOrder.verify(bookingRepository).existsApprovedOverlap(
+                3L, LocalDate.parse("2026-09-01"), LocalDate.parse("2026-09-03"), 7L);
+        inOrder.verify(bookingRepository).save(booking);
     }
 
     @Test
     void approveBooking_throwsNotFoundBeforeManagerLookupWhenBookingDoesNotExist() {
         // arrange
-        when(bookingRepository.findByIdForUpdate(99L)).thenReturn(Optional.empty());
+        when(bookingRepository.findById(99L)).thenReturn(Optional.empty());
 
         // act & assert
         assertThatThrownBy(() -> sut.approveBooking(99L, 11L))
@@ -84,6 +93,26 @@ class BookingApprovalServiceTest {
                 .extracting(exception -> ((BookingApprovalException) exception).getReason())
                 .isEqualTo(BookingApprovalException.Reason.NOT_FOUND);
         verifyNoInteractions(userRepository);
+        verify(bookingRepository, never()).lockResourceAdvisory(org.mockito.ArgumentMatchers.anyLong());
+        verify(bookingRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void approveBooking_throwsNotFoundWhenBookingDisappearsAfterResourceLock() {
+        // arrange
+        var booking = booking(7L, BookingStatus.PENDING);
+        when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.findByIdForUpdate(7L)).thenReturn(Optional.empty());
+
+        // act & assert
+        assertThatThrownBy(() -> sut.approveBooking(7L, 11L))
+                .isInstanceOf(BookingApprovalException.class)
+                .hasMessage("Booking not found with ID: 7");
+        var inOrder = inOrder(bookingRepository);
+        inOrder.verify(bookingRepository).findById(7L);
+        inOrder.verify(bookingRepository).lockResourceAdvisory(3L);
+        inOrder.verify(bookingRepository).findByIdForUpdate(7L);
+        verifyNoInteractions(userRepository);
         verify(bookingRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -91,6 +120,7 @@ class BookingApprovalServiceTest {
     void approveBooking_throwsNotFoundWhenManagerDoesNotExist() {
         // arrange
         var booking = booking(7L, BookingStatus.PENDING);
+        when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
         when(bookingRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(booking));
         when(userRepository.findById(88L)).thenReturn(Optional.empty());
 
@@ -115,6 +145,7 @@ class BookingApprovalServiceTest {
     void approveBooking_throwsConflictBeforeOverlapCheckWhenBookingIsNotPending() {
         // arrange
         var booking = booking(7L, BookingStatus.APPROVED);
+        when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
         when(bookingRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(booking));
         when(userRepository.findById(11L)).thenReturn(Optional.of(manager(11L, true, "MANAGER")));
 
@@ -134,6 +165,7 @@ class BookingApprovalServiceTest {
     void approveBooking_throwsConflictWithoutChangingBookingWhenApprovedDatesOverlap() {
         // arrange
         var booking = booking(7L, BookingStatus.PENDING);
+        when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
         when(bookingRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(booking));
         when(userRepository.findById(11L)).thenReturn(Optional.of(manager(11L, true, "MANAGER")));
         when(bookingRepository.existsApprovedOverlap(
@@ -152,6 +184,7 @@ class BookingApprovalServiceTest {
     private void assertManagerForbidden(boolean active, String role) {
         // arrange
         var booking = booking(7L, BookingStatus.PENDING);
+        when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
         when(bookingRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(booking));
         when(userRepository.findById(11L)).thenReturn(Optional.of(manager(11L, active, role)));
 
