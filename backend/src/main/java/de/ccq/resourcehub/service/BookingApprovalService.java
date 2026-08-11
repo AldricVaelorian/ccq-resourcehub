@@ -27,7 +27,11 @@ public class BookingApprovalService {
 
     @Transactional
     public BookingResponse approveBooking(Long bookingId, Long managerId) {
-        Booking booking = bookingRepository.findByIdForUpdate(bookingId)
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> BookingApprovalException.notFound(bookingId));
+        Long resourceId = booking.getResource().getId();
+        bookingRepository.lockResourceAdvisory(resourceId);
+        booking = bookingRepository.findByIdForUpdate(bookingId)
                 .orElseThrow(() -> BookingApprovalException.notFound(bookingId));
         User manager = userRepository.findById(managerId)
                 .orElseThrow(() -> BookingApprovalException.managerNotFound(managerId));
@@ -39,8 +43,6 @@ public class BookingApprovalService {
             throw BookingApprovalException.invalidStatus(booking.getStatus());
         }
 
-        Long resourceId = booking.getResource().getId();
-        bookingRepository.lockResourceById(resourceId);
         if (bookingRepository.existsApprovedOverlap(
                 resourceId, booking.getStartDate(), booking.getEndDate(), booking.getId())) {
             throw BookingApprovalException.overlap();
