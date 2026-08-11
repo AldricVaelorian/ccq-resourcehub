@@ -12,8 +12,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -29,8 +31,15 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 class BlockTimeRepositoryIntegrationTest {
 
     @Container
-    private static final PostgreSQLContainer<?> postgresqlContainer =
-            new PostgreSQLContainer<>("postgres:18-alpine");
+    private static final PostgreSQLContainer postgresqlContainer =
+            new PostgreSQLContainer("postgres:18-alpine");
+
+    @DynamicPropertySource
+    static void configurePostgres(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgresqlContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgresqlContainer::getUsername);
+        registry.add("spring.datasource.password", postgresqlContainer::getPassword);
+    }
 
     @Autowired
     private BlockTimeRepository repository;
@@ -385,7 +394,7 @@ class BlockTimeRepositoryIntegrationTest {
         @DisplayName("creates new block time with auto-generated ID")
         void createsNewBlockTime() {
             // Given
-            BlockTime blockTime = createBlockTime(null, "New Block",
+            BlockTime blockTime = createBlockTime(1L, "New Block",
                     LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 5));
 
             // When
@@ -453,10 +462,9 @@ class BlockTimeRepositoryIntegrationTest {
         }
     }
 
-    private BlockTime createBlockTime(Long id, String title, LocalDate startDate, LocalDate endDate) {
+    private BlockTime createBlockTime(Long resourceId, String title, LocalDate startDate, LocalDate endDate) {
         BlockTime blockTime = new BlockTime();
-        blockTime.setId(id);
-        blockTime.setResourceId(1L);
+        blockTime.setResourceId(resourceId);
         blockTime.setTitle(title);
         blockTime.setDescription("Test description");
         blockTime.setStartDate(startDate);
