@@ -80,7 +80,7 @@ class AdminBookingOverviewControllerTest {
                     null,
                     null);
 
-            when(service.findAllBookings(adminId)).thenReturn(List.of(response1, response2));
+            when(service.findAllBookings(adminId)).thenReturn(List.of(response2, response1));
 
             // When/Then
             mockMvc.perform(get("/api/admin/bookings?adminId={adminId}", adminId)
