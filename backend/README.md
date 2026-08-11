@@ -145,18 +145,12 @@ Migrations are automatically executed when the application starts. Ensure the
 PostgreSQL database is available and configured correctly before starting the
 application.
 
-### Manual Migration Commands
-
-```bash
-# Check migration status
-./mvnw flyway:status
-
-# Run migrations
-./mvnw flyway:migrate
-
-# Undo last migration (if configured)
-./mvnw flyway:undo
-```
+The project does not configure the Flyway Maven plugin. Migration commands such
+as `flyway:migrate` and `flyway:undo` are therefore not part of the supported
+workflow. To apply pending migrations, start the backend with
+`./mvnw spring-boot:run`; Spring Boot runs Flyway before the application becomes
+available. Migration failures stop application startup so schema problems are
+not silently ignored.
 
 ### Environment Variables for Flyway
 
