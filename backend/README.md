@@ -38,9 +38,8 @@ The database will be available at `localhost:5432` with default credentials:
 Create a PostgreSQL database for development:
 
 ```sql
-CREATE DATABASE resourcehub;
 CREATE USER resourcehub_user WITH PASSWORD 'resourcehub_pass';
-GRANT ALL PRIVILEGES ON DATABASE resourcehub TO resourcehub_user;
+CREATE DATABASE resourcehub OWNER resourcehub_user;
 ```
 
 ### Compile production sources
