@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import de.ccq.resourcehub.entity.AvailabilityRule;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceException;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -122,7 +122,8 @@ class AvailabilityRuleRepositoryIntegrationTest {
 
         // act & assert
         assertThatThrownBy(() -> repository.saveAndFlush(invalid))
-                .isInstanceOf(PersistenceException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("chk_availability_rules_time_window");
     }
 
     private AvailabilityRule rule(

@@ -59,8 +59,10 @@ class AvailabilityRuleControllerTest {
                 .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.name").value("Monday hours"))
                 .andExpect(jsonPath("$.dayOfWeek").value("MONDAY"))
-                .andExpect(jsonPath("$.startTime").value("08:00:00"))
-                .andExpect(jsonPath("$.endTime").value("17:00:00"))
+                .andExpect(jsonPath("$.startTime[0]").value(8))
+                .andExpect(jsonPath("$.startTime[1]").value(0))
+                .andExpect(jsonPath("$.endTime[0]").value(17))
+                .andExpect(jsonPath("$.endTime[1]").value(0))
                 .andExpect(jsonPath("$.active").value(true));
     }
 
