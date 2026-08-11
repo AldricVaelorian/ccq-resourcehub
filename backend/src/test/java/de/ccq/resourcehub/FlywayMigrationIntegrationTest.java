@@ -29,13 +29,19 @@ class FlywayMigrationIntegrationTest {
         var result = flyway.migrate();
 
         // assert
-        assertThat(result.migrationsExecuted).isEqualTo(2);
+        assertThat(result.migrationsExecuted).isEqualTo(3);
         assertThat(flyway.info().applied())
                 .extracting(migration -> migration.getVersion().getVersion())
-                .containsExactly("1", "2");
-        assertThat(publicTables()).containsExactlyInAnyOrder("block_times", "flyway_schema_history");
+                .containsExactly("1", "2", "3");
+        assertThat(publicTables())
+                .containsExactlyInAnyOrder("availability_rules", "block_times", "flyway_schema_history");
         assertThat(blockTimeIndexes())
                 .contains("block_times_pkey", "idx_block_times_resource_id", "idx_block_times_date_range");
+        assertThat(availabilityRuleIndexes())
+                .contains(
+                        "availability_rules_pkey",
+                        "idx_availability_rules_day_of_week",
+                        "idx_availability_rules_active");
     }
 
     private List<String> publicTables() throws SQLException {
@@ -51,10 +57,18 @@ class FlywayMigrationIntegrationTest {
     }
 
     private List<String> blockTimeIndexes() throws SQLException {
+        return indexesFor("block_times");
+    }
+
+    private List<String> availabilityRuleIndexes() throws SQLException {
+        return indexesFor("availability_rules");
+    }
+
+    private List<String> indexesFor(String tableName) throws SQLException {
         var indexes = new ArrayList<String>();
         try (var connection = DriverManager.getConnection(
                         postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
-                var result = connection.getMetaData().getIndexInfo(null, "public", "block_times", false, false)) {
+                var result = connection.getMetaData().getIndexInfo(null, "public", tableName, false, false)) {
             while (result.next()) {
                 indexes.add(result.getString("INDEX_NAME"));
             }
