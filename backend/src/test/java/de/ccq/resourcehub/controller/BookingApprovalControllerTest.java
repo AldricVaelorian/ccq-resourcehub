@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.ccq.resourcehub.dto.BookingResponse;
 import de.ccq.resourcehub.entity.BookingStatus;
@@ -30,7 +31,9 @@ class BookingApprovalControllerTest {
     @BeforeEach
     void setUp() {
         service = org.mockito.Mockito.mock(BookingApprovalService.class);
-        var objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        var objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         var validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
         mockMvc = MockMvcBuilders.standaloneSetup(new BookingApprovalController(service))
