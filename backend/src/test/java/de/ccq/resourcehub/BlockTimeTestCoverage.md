@@ -52,12 +52,12 @@ This document summarizes the test coverage for the BlockTime entity functionalit
 
 **Location:** `backend/src/test/java/de/ccq/resourcehub/repository/BlockTimeRepositoryIntegrationTest.java`
 
-**Test Level:** Integration Test (with TestEntityManager)
+**Test Level:** Integration Test (with Testcontainers and TestEntityManager)
 
 **Coverage:**
 
 #### findByResourceIdOrderByStartDateAsc
-- ✅ Returns block times ordered by start date
+- ✅ Returns block times ordered by start date for a resource
 - ✅ Returns empty list when no block times exist for resource
 - ✅ Returns block times only for specified resource
 
@@ -66,11 +66,23 @@ This document summarizes the test coverage for the BlockTime entity functionalit
 - ✅ Finds block times that exactly match the range boundaries
 - ✅ Finds block times that contain the range
 - ✅ Finds block times contained within the range
-- ✅ Finds block times that start exactly at end date
+- ✅ Finds block times that start exactly at end date (adjacent)
 - ✅ Returns empty list when no overlapping block times exist
 - ✅ Returns empty list when checking different resource
+- ✅ Finds multiple overlapping block times
 
-**Test Strategy:** Uses `@DataJpaTest` with `TestEntityManager` for database interaction testing.
+#### findById
+- ✅ Returns block time when it exists
+- ✅ Returns empty optional when block time does not exist
+
+#### save
+- ✅ Creates new block time with auto-generated ID
+- ✅ Updates existing block time
+
+#### deleteById
+- ✅ Deletes block time by ID
+
+**Test Strategy:** Uses `@DataJpaTest` with Testcontainers PostgreSQL for real database interaction testing.
 
 ---
 
@@ -117,9 +129,9 @@ This document summarizes the test coverage for the BlockTime entity functionalit
 | Component | Test Files | Test Count | Coverage Level |
 |-----------|-----------|------------|----------------|
 | Service Layer | BlockTimeServiceTest | 20 | Unit Test (Mockito) |
-| Repository Layer | BlockTimeRepositoryIntegrationTest | 14 | Integration Test (JPA) |
+| Repository Layer | BlockTimeRepositoryIntegrationTest | 19 | Integration Test (JPA + Testcontainers) |
 | Controller Layer | BlockTimeControllerSliceTest | 13 | Slice Test (WebMvc) |
-| **Total** | **3** | **47** | **All Layers** |
+| **Total** | **3** | **52** | **All Layers** |
 
 ---
 
@@ -144,6 +156,7 @@ This document summarizes the test coverage for the BlockTime entity functionalit
 4. ✅ Title is required (not null, not empty, not whitespace only)
 5. ✅ Resource ID is required (not null)
 6. ✅ Date range validation for overlap checking
+7. ✅ Controller-level `@Valid` annotation triggers validation
 
 ---
 
@@ -155,6 +168,18 @@ This document summarizes the test coverage for the BlockTime entity functionalit
 4. ✅ Block times contained within query range
 5. ✅ Empty result sets
 6. ✅ Non-existent resources and block time IDs
+7. ✅ Multiple overlapping block times
+8. ✅ Different resources isolation
+
+---
+
+## Database Integration Testing
+
+- ✅ Real PostgreSQL database via Testcontainers
+- ✅ Schema creation and migration compatibility
+- ✅ JPA entity mapping and relationships
+- ✅ Custom JPQL query behavior
+- ✅ First-level cache management with `entityManager.clear()`
 
 ---
 
@@ -168,16 +193,31 @@ This document summarizes the test coverage for the BlockTime entity functionalit
 - ✅ Tests don't depend on test execution order
 - ✅ Tests verify interactions with mocks using `verify()` and `verifyNoMoreInteractions()`
 - ✅ Tests use `verifyNoInteractions()` to ensure early exit on validation failures
+- ✅ Integration tests use real database for accurate query testing
+
+---
+
+## Coverage for Flyway Migrations
+
+The following Flyway migration files are included:
+
+1. **V1__Initial_Schema.sql** - Base schema creation (users, resources, bookings, lending_records, blocked_times, audit_log)
+2. **V2__BlockTime_Entity.sql** - BlockTime table and indexes
+
+Flyway configuration is set up in `application.yml` with environment variable support.
+
+**Note:** Flyway migration testing should be done through integration tests that verify the schema is created correctly when the application starts.
 
 ---
 
 ## Recommendations for Further Testing
 
-1. **Controller Integration Tests:** Consider adding full integration tests with Spring Boot test context for end-to-end API verification
-2. **Performance Tests:** Add tests for large result sets to verify pagination or streaming behavior
-3. **Security Tests:** Add tests to verify role-based access control (currently simplified to MANAGER role check)
-4. **Database Constraint Tests:** Add tests for unique constraint violations and foreign key constraints
-5. **Concurrency Tests:** Add tests for concurrent block time creation and overlap checking
+1. **Flyway Migration Tests:** Add integration tests that verify Flyway migrations execute correctly on application startup
+2. **Controller Integration Tests:** Consider adding full integration tests with Spring Boot test context for end-to-end API verification
+3. **Performance Tests:** Add tests for large result sets to verify pagination or streaming behavior
+4. **Security Tests:** Add tests to verify role-based access control (currently simplified to MANAGER role check)
+5. **Database Constraint Tests:** Add tests for unique constraint violations and foreign key constraints
+6. **Concurrency Tests:** Add tests for concurrent block time creation and overlap checking
 
 ---
 
@@ -220,3 +260,4 @@ cd backend
 - Service: `backend/src/main/java/de/ccq/resourcehub/service/BlockTimeService.java`
 - Controller: `backend/src/main/java/de/ccq/resourcehub/controller/BlockTimeController.java`
 - Database Migration: `backend/src/main/resources/db/migration/V2__BlockTime_Entity.sql`
+- Flyway Config: `backend/src/main/resources/application.yml`

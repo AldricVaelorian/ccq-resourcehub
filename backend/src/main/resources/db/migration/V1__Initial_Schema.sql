@@ -1,0 +1,2 @@
+-- Establish Flyway migration history without predefining future domain schemas.
+-- The schema currently represented by the application is introduced by V2.

@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:${DATABASE_PORT:5432}/${DATABASE_NAME:test_resourcehub}
+    username: ${DATABASE_USER:resourcehub_user}
+    password: ${DATABASE_PASS:resourcehub_pass}
+    driver-class-name: org.postgresql.Driver
+
+# Test Flyway configuration
+spring.flyway:
+  enabled: true
+  baseline-on-migrate: true
+  baseline-version: 0
+  locations: classpath:db/migration
+  table: flyway_schema_history
+  validate-on-migrate: true
+  mixed: false

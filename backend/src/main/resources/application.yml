@@ -46,3 +46,13 @@ spring.datasource:
   username: ${SPRING_DATASOURCE_USERNAME:resourcehub_user}
   password: ${SPRING_DATASOURCE_PASSWORD:resourcehub_pass}
   driver-class-name: org.postgresql.Driver
+
+# Flyway configuration for database migrations
+spring.flyway:
+  enabled: ${FLYWAY_ENABLED:true}
+  baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:true}
+  baseline-version: 0
+  locations: classpath:db/migration
+  table: flyway_schema_history
+  validate-on-migrate: ${FLYWAY_VALIDATE_ON_MIGRATE:true}
+  mixed: ${FLYWAY_MIXED:false}
