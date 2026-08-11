@@ -29,12 +29,18 @@ class FlywayMigrationIntegrationTest {
         var result = flyway.migrate();
 
         // assert
-        assertThat(result.migrationsExecuted).isEqualTo(3);
+        assertThat(result.migrationsExecuted).isEqualTo(4);
         assertThat(flyway.info().applied())
                 .extracting(migration -> migration.getVersion().getVersion())
-                .containsExactly("1", "2", "3");
+                .containsExactly("1", "2", "3", "4");
         assertThat(publicTables())
-                .containsExactlyInAnyOrder("availability_rules", "block_times", "flyway_schema_history");
+                .containsExactlyInAnyOrder(
+                        "availability_rules",
+                        "block_times",
+                        "bookings",
+                        "flyway_schema_history",
+                        "resources",
+                        "users");
         assertThat(blockTimeIndexes())
                 .contains("block_times_pkey", "idx_block_times_resource_id", "idx_block_times_date_range");
         assertThat(availabilityRuleIndexes())
@@ -42,6 +48,8 @@ class FlywayMigrationIntegrationTest {
                         "availability_rules_pkey",
                         "idx_availability_rules_day_of_week",
                         "idx_availability_rules_active");
+        assertThat(indexesFor("bookings"))
+                .contains("bookings_pkey", "idx_bookings_resource_status_dates");
     }
 
     private List<String> publicTables() throws SQLException {
