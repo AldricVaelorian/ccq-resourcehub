@@ -51,6 +51,12 @@ public class Booking {
     @Column(name = "approved_at")
     private Instant approvedAt;
 
+    @Column(name = "rejected_at")
+    private Instant rejectedAt;
+
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -70,6 +76,10 @@ public class Booking {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getApprovedAt() { return approvedAt; }
     public void setApprovedAt(Instant approvedAt) { this.approvedAt = approvedAt; }
+    public Instant getRejectedAt() { return rejectedAt; }
+    public void setRejectedAt(Instant rejectedAt) { this.rejectedAt = rejectedAt; }
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
     public BookingStatus getStatus() { return status; }
     public void setStatus(BookingStatus status) { this.status = status; }
 }

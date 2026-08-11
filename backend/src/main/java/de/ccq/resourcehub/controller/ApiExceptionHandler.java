@@ -2,6 +2,7 @@ package de.ccq.resourcehub.controller;
 
 import de.ccq.resourcehub.dto.ApiErrorResponse;
 import de.ccq.resourcehub.exception.BookingApprovalException;
+import de.ccq.resourcehub.exception.BookingRejectionException;
 import de.ccq.resourcehub.service.AvailabilityRuleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +44,16 @@ public class ApiExceptionHandler {
         };
         return ResponseEntity.status(status)
                 .body(new ApiErrorResponse("BOOKING_APPROVAL_" + exception.getReason(), exception.getMessage()));
+    }
+
+    @ExceptionHandler(BookingRejectionException.class)
+    public ResponseEntity<ApiErrorResponse> handleBookingRejection(BookingRejectionException exception) {
+        HttpStatus status = switch (exception.getReason()) {
+            case NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case FORBIDDEN -> HttpStatus.FORBIDDEN;
+            case CONFLICT -> HttpStatus.CONFLICT;
+        };
+        return ResponseEntity.status(status)
+                .body(new ApiErrorResponse("BOOKING_REJECTION_" + exception.getReason(), exception.getMessage()));
     }
 }
