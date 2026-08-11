@@ -1,6 +1,7 @@
 package de.ccq.resourcehub.repository;
 
 import de.ccq.resourcehub.entity.Booking;
+import de.ccq.resourcehub.entity.Resource;
 import jakarta.persistence.LockModeType;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -14,6 +15,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from Booking b where b.id = :id")
     Optional<Booking> findByIdForUpdate(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Resource r where r.id = :id")
+    Resource lockResourceById(@Param("id") Long id);
 
     @Query("""
             select (count(b) > 0) from Booking b

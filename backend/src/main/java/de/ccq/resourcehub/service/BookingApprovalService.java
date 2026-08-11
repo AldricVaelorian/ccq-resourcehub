@@ -38,8 +38,11 @@ public class BookingApprovalService {
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw BookingApprovalException.invalidStatus(booking.getStatus());
         }
+
+        Long resourceId = booking.getResource().getId();
+        bookingRepository.lockResourceById(resourceId);
         if (bookingRepository.existsApprovedOverlap(
-                booking.getResource().getId(), booking.getStartDate(), booking.getEndDate(), booking.getId())) {
+                resourceId, booking.getStartDate(), booking.getEndDate(), booking.getId())) {
             throw BookingApprovalException.overlap();
         }
 
