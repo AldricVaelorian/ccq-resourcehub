@@ -4,19 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import de.ccq.resourcehub.entity.Booking;
 import de.ccq.resourcehub.entity.BookingStatus;
-import de.ccq.resourcehub.entity.Resource;
-import de.ccq.resourcehub.entity.User;
 import de.ccq.resourcehub.repository.BookingRepository;
-import de.ccq.resourcehub.repository.ResourceRepository;
-import de.ccq.resourcehub.repository.UserRepository;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -44,10 +39,7 @@ class BookingApprovalConcurrencyIntegrationTest {
     private BookingRepository bookingRepository;
 
     @Autowired
-    private ResourceRepository resourceRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    private JdbcTemplate jdbcTemplate;
 
     private Long managerId;
     private Long firstBookingId;
@@ -55,22 +47,13 @@ class BookingApprovalConcurrencyIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        bookingRepository.deleteAll();
-        resourceRepository.deleteAll();
-        userRepository.deleteAll();
-
-        var manager = user("manager", "manager@example.com", "MANAGER");
-        managerId = userRepository.save(manager).getId();
-        var requester = userRepository.save(user("requester", "requester@example.com", "USER"));
-
-        var resource = new Resource();
-        resource.setName("Concurrent approval room");
-        resource = resourceRepository.save(resource);
-
-        firstBookingId = bookingRepository.save(booking(resource, requester, LocalDate.of(2026, 8, 12),
-                LocalDate.of(2026, 8, 14))).getId();
-        secondBookingId = bookingRepository.save(booking(resource, requester, LocalDate.of(2026, 8, 13),
-                LocalDate.of(2026, 8, 15))).getId();
+        jdbcTemplate.execute("truncate table bookings, resources, users restart identity cascade");
+        managerId = insertUser("manager", "manager@example.com", "MANAGER");
+        var requesterId = insertUser("requester", "requester@example.com", "USER");
+        var resourceId = jdbcTemplate.queryForObject(
+                "insert into resources (name) values ('Concurrent approval room') returning id", Long.class);
+        firstBookingId = insertBooking(resourceId, requesterId, "2026-08-12", "2026-08-14");
+        secondBookingId = insertBooking(resourceId, requesterId, "2026-08-13", "2026-08-15");
     }
 
     @Test
@@ -106,23 +89,16 @@ class BookingApprovalConcurrencyIntegrationTest {
         }
     }
 
-    private User user(String username, String email, String role) {
-        var user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setRole(role);
-        user.setActive(true);
-        return user;
+    private Long insertUser(String username, String email, String role) {
+        return jdbcTemplate.queryForObject(
+                "insert into users (username, email, role, is_active) values (?, ?, ?, true) returning id",
+                Long.class, username, email, role);
     }
 
-    private Booking booking(Resource resource, User requester, LocalDate startDate, LocalDate endDate) {
-        var booking = new Booking();
-        booking.setResource(resource);
-        booking.setUser(requester);
-        booking.setStartDate(startDate);
-        booking.setEndDate(endDate);
-        booking.setCreatedAt(Instant.parse("2026-08-11T10:00:00Z"));
-        booking.setStatus(BookingStatus.PENDING);
-        return booking;
+    private Long insertBooking(Long resourceId, Long requesterId, String startDate, String endDate) {
+        return jdbcTemplate.queryForObject("""
+                insert into bookings (resource_id, user_id, start_date, end_date, created_at, status)
+                values (?, ?, ?::date, ?::date, ?::timestamptz, 'PENDING') returning id
+                """, Long.class, resourceId, requesterId, startDate, endDate, "2026-08-11T10:00:00Z");
     }
 }
