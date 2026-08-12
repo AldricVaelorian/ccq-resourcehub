@@ -27,6 +27,9 @@ public class BookingExportController {
     @GetMapping
     public ResponseEntity<List<BookingExportResponse>> exportAllBookings(
             @RequestParam @Positive Long adminId) {
+        if (adminId == null || adminId <= 0) {
+            throw new de.ccq.resourcehub.exception.AdminBookingOverviewValidationException("adminId must be positive");
+        }
         List<BookingExportResponse> bookings = bookingExportService.exportAllBookings(adminId);
         return ResponseEntity.ok(bookings);
     }
@@ -35,6 +38,12 @@ public class BookingExportController {
     public ResponseEntity<List<BookingExportResponse>> exportBookingsByStatus(
             @RequestParam @Positive Long adminId,
             @RequestParam String status) {
+        if (adminId == null || adminId <= 0) {
+            throw new de.ccq.resourcehub.exception.AdminBookingOverviewValidationException("adminId must be positive");
+        }
+        if (status == null || status.trim().isEmpty() || "null".equalsIgnoreCase(status)) {
+            throw new de.ccq.resourcehub.exception.AdminBookingOverviewValidationException("status: must not be null or empty");
+        }
         List<BookingExportResponse> bookings = bookingExportService.exportBookingsByStatus(adminId, status);
         return ResponseEntity.ok(bookings);
     }
@@ -44,12 +53,23 @@ public class BookingExportController {
             @RequestParam @Positive Long adminId,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
+        if (adminId == null || adminId <= 0) {
+            throw new de.ccq.resourcehub.exception.AdminBookingOverviewValidationException("adminId must be positive");
+        }
         List<BookingExportResponse> bookings = bookingExportService.exportBookingsByDateRange(adminId, startDate, endDate);
         return ResponseEntity.ok(bookings);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(BookingExportException.class)
-    public ResponseEntity<String> handleBookingExportException(BookingExportException ex) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<de.ccq.resourcehub.dto.ApiErrorResponse> handleBookingExportException(BookingExportException ex) {
+        de.ccq.resourcehub.dto.ApiErrorResponse error = new de.ccq.resourcehub.dto.ApiErrorResponse(
+                "BOOKING_EXPORT_" + ex.getReason(),
+                ex.getMessage());
+        return ResponseEntity.status(switch (ex.getReason()) {
+                    case NOT_FOUND -> org.springframework.http.HttpStatus.NOT_FOUND;
+                    case FORBIDDEN -> org.springframework.http.HttpStatus.FORBIDDEN;
+                    case INVALID_REQUEST -> org.springframework.http.HttpStatus.BAD_REQUEST;
+                })
+                .body(error);
     }
 }
