@@ -4,6 +4,7 @@ import de.ccq.resourcehub.dto.ApiErrorResponse;
 import de.ccq.resourcehub.exception.AdminBookingOverviewException;
 import de.ccq.resourcehub.exception.AdminBookingOverviewValidationException;
 import de.ccq.resourcehub.exception.BookingApprovalException;
+import de.ccq.resourcehub.exception.BookingExportException;
 import de.ccq.resourcehub.exception.BookingRejectionException;
 import de.ccq.resourcehub.service.AvailabilityRuleService;
 import jakarta.validation.ConstraintViolationException;
@@ -84,6 +85,17 @@ public class ApiExceptionHandler {
         };
         return ResponseEntity.status(status)
                 .body(new ApiErrorResponse("BOOKING_APPROVAL_" + exception.getReason(), exception.getMessage()));
+    }
+
+    @ExceptionHandler(BookingExportException.class)
+    public ResponseEntity<ApiErrorResponse> handleBookingExport(BookingExportException exception) {
+        HttpStatus status = switch (exception.getReason()) {
+            case NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case FORBIDDEN -> HttpStatus.FORBIDDEN;
+            case INVALID_REQUEST -> HttpStatus.BAD_REQUEST;
+        };
+        return ResponseEntity.status(status)
+                .body(new ApiErrorResponse("BOOKING_EXPORT_" + exception.getReason(), exception.getMessage()));
     }
 
     @ExceptionHandler(BookingRejectionException.class)
