@@ -680,6 +680,116 @@ class BookingExportServiceTest {
             assertThat(result).hasSize(1);
             assertThat(result.get(0).id()).isEqualTo(1L);
         }
+
+        @Test
+        @DisplayName("includes bookings that end exactly on query start date")
+        void includesBookingsEndingOnQueryStartDate() {
+            // Given
+            Long adminId = 1L;
+            User admin = new User();
+            admin.setId(adminId);
+            admin.setActive(true);
+            admin.setRole("ADMIN");
+
+            // Booking: 2026-01-05 to 2026-01-10 (ends exactly when query starts)
+            Booking booking = createBooking(1L, 10L, 20L, LocalDate.of(2026, 1, 5), LocalDate.of(2026, 1, 10));
+            booking.setCreatedAt(java.time.Instant.parse("2026-01-05T10:00:00Z"));
+
+            when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+            when(bookingRepository.findAllByOrderByCreatedAtDescIdDesc()).thenReturn(List.of(booking));
+
+            // When: query for bookings in 2026-01-10 to 2026-01-15
+            List<BookingExportResponse> result = sut.exportBookingsByDateRange(
+                    adminId,
+                    LocalDate.of(2026, 1, 10),
+                    LocalDate.of(2026, 1, 15));
+
+            // Then: booking should be included (touching boundary)
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).id()).isEqualTo(1L);
+        }
+
+        @Test
+        @DisplayName("includes bookings that start exactly on query end date")
+        void includesBookingsStartingOnQueryEndDate() {
+            // Given
+            Long adminId = 1L;
+            User admin = new User();
+            admin.setId(adminId);
+            admin.setActive(true);
+            admin.setRole("ADMIN");
+
+            // Booking: 2026-01-15 to 2026-01-20 (starts exactly when query ends)
+            Booking booking = createBooking(1L, 10L, 20L, LocalDate.of(2026, 1, 15), LocalDate.of(2026, 1, 20));
+            booking.setCreatedAt(java.time.Instant.parse("2026-01-15T10:00:00Z"));
+
+            when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+            when(bookingRepository.findAllByOrderByCreatedAtDescIdDesc()).thenReturn(List.of(booking));
+
+            // When: query for bookings in 2026-01-10 to 2026-01-15
+            List<BookingExportResponse> result = sut.exportBookingsByDateRange(
+                    adminId,
+                    LocalDate.of(2026, 1, 10),
+                    LocalDate.of(2026, 1, 15));
+
+            // Then: booking should be included (touching boundary)
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).id()).isEqualTo(1L);
+        }
+
+        @Test
+        @DisplayName("excludes bookings with gap before query start date")
+        void excludesBookingsWithGapBeforeQuery() {
+            // Given
+            Long adminId = 1L;
+            User admin = new User();
+            admin.setId(adminId);
+            admin.setActive(true);
+            admin.setRole("ADMIN");
+
+            // Booking: 2026-01-05 to 2026-01-09 (ends one day before query starts)
+            Booking booking = createBooking(1L, 10L, 20L, LocalDate.of(2026, 1, 5), LocalDate.of(2026, 1, 9));
+            booking.setCreatedAt(java.time.Instant.parse("2026-01-05T10:00:00Z"));
+
+            when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+            when(bookingRepository.findAllByOrderByCreatedAtDescIdDesc()).thenReturn(List.of(booking));
+
+            // When: query for bookings in 2026-01-10 to 2026-01-15
+            List<BookingExportResponse> result = sut.exportBookingsByDateRange(
+                    adminId,
+                    LocalDate.of(2026, 1, 10),
+                    LocalDate.of(2026, 1, 15));
+
+            // Then: booking should be excluded (gap before query)
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("excludes bookings with gap after query end date")
+        void excludesBookingsWithGapAfterQuery() {
+            // Given
+            Long adminId = 1L;
+            User admin = new User();
+            admin.setId(adminId);
+            admin.setActive(true);
+            admin.setRole("ADMIN");
+
+            // Booking: 2026-01-16 to 2026-01-20 (starts one day after query ends)
+            Booking booking = createBooking(1L, 10L, 20L, LocalDate.of(2026, 1, 16), LocalDate.of(2026, 1, 20));
+            booking.setCreatedAt(java.time.Instant.parse("2026-01-16T10:00:00Z"));
+
+            when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+            when(bookingRepository.findAllByOrderByCreatedAtDescIdDesc()).thenReturn(List.of(booking));
+
+            // When: query for bookings in 2026-01-10 to 2026-01-15
+            List<BookingExportResponse> result = sut.exportBookingsByDateRange(
+                    adminId,
+                    LocalDate.of(2026, 1, 10),
+                    LocalDate.of(2026, 1, 15));
+
+            // Then: booking should be excluded (gap after query)
+            assertThat(result).isEmpty();
+        }
     }
 
     private Booking createBooking(Long id, Long resourceId, Long userId, LocalDate startDate, LocalDate endDate) {
