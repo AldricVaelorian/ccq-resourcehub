@@ -51,8 +51,8 @@ jobs:
       - name: Compile production sources
         run: ./mvnw -Dmaven.test.skip=true clean compile
 
-      - name: Run tests
-        run: ./mvnw test
+      - name: Run tests and enforce coverage
+        run: ./mvnw clean verify
 
       - name: Upload test results
         if: always()
@@ -60,7 +60,7 @@ jobs:
         with:
           name: test-results
           path: backend/target/surefire-reports/
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Upload JaCoCo coverage
         if: always()
@@ -68,7 +68,7 @@ jobs:
         with:
           name: jacoco-coverage
           path: backend/target/site/jacoco/
-          if-no-files-found: warn
+          if-no-files-found: error
 
   quality:
     name: Quality checks
@@ -97,7 +97,6 @@ jobs:
     name: Mutation testing
     runs-on: ubuntu-latest
     needs: test
-    continue-on-error: true
     defaults:
       run:
         working-directory: backend
@@ -126,12 +125,11 @@ jobs:
         with:
           name: pit-mutation-report
           path: backend/target/pit-reports/
-          if-no-files-found: warn
+          if-no-files-found: error
 
   sast:
     name: CodeQL SAST
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     permissions:
       actions: read
